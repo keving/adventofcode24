@@ -44,6 +44,21 @@ day2_1 = do
     listIncs _ = []
     valid xs = (all (>0) xs || all (<0) xs) && all ((<= 3) . abs) xs
 
+day2_2 :: IO ()
+day2_2 = do
+  inp <- getContents
+  let reports = map (fromRight []. parse parseInts "(input)") $ lines inp
+  let augReports = map (\xs -> xs:stripped xs) reports
+  print $ length $ filter (any (valid . listIncs)) augReports -- length $ filter valid $ map listIncs augReports
+  where
+    parseInts :: Parsec String () [Int]
+    parseInts = many1 $ do int <* spaces
+    listIncs :: [Int] -> [Int]
+    listIncs (x:y:ys) =(x-y):listIncs (y:ys)
+    listIncs _ = []
+    valid xs = (all (>0) xs || all (<0) xs) && all ((<= 3) . abs) xs
+    stripped [] = []
+    stripped (x:xs) = xs : map ([x]++) (stripped xs)
 
 main :: IO ()
-main = day2_1
+main = day2_2
