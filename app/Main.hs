@@ -1,11 +1,9 @@
 {-# OPTIONS_GHC -fno-warn-incomplete-patterns #-}
 module Main where
 
-import Control.Monad (void)
-import Data.Bifunctor (bimap)
 import Data.Either (fromRight)
 import Data.Functor ((<&>))
-import Data.List (isPrefixOf, tails, singleton, group, sort, sortBy, sortOn)
+import Data.List (isPrefixOf, tails, singleton, group, sort, sortBy, sortOn, transpose)
 import Data.Map ((!))
 import qualified Data.Map as Map
 import Data.Maybe (mapMaybe)
@@ -87,5 +85,18 @@ day3_2 = do
     process True (xs:xss) = let (m1, m2) = fromRight (0, 0) . parse parseMul "(input)" $ xs in
                                m1*m2 + process True xss
 
+day4_1 :: IO ()
+day4_1 = do
+  inp <- fmap lines getContents
+  let forwards = inp ++ transpose inp ++ diagonals inp ++ diagonals (map reverse inp)
+  print $ length $ concatMap (filter (isPrefixOf "XMAS") . tails) (forwards ++ map reverse forwards)
+  where
+    diagonals :: [[a]] -> [[a]]
+    diagonals = tail . go [] where
+      go b es_ = [h | h:_ <- b] : case es_ of
+                                    []   -> transpose ts
+                                    e:es -> go (e:ts) es
+                                    where ts = [t | _:t <- b]
+
 main :: IO ()
-main = day3_1
+main = day4_1
