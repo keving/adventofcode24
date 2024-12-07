@@ -47,9 +47,8 @@ day2_1 = do
 day2_2 :: IO ()
 day2_2 = do
   inp <- getContents
-  let reports = map (fromRight []. parse parseInts "(input)") $ lines inp
-  let augReports = map (\xs -> xs:stripped xs) reports
-  print $ length $ filter (any (valid . listIncs)) augReports -- length $ filter valid $ map listIncs augReports
+  let augReports = map ((\xs -> xs:stripped xs) . fromRight []. parse parseInts "(input)") $ lines inp
+  print $ length $ filter (any (valid . listIncs)) augReports
   where
     parseInts :: Parsec String () [Int]
     parseInts = many1 $ do int <* spaces
@@ -60,5 +59,16 @@ day2_2 = do
     stripped [] = []
     stripped (x:xs) = xs : map ([x]++) (stripped xs)
 
+day3_1 :: IO ()
+day3_1 = do
+  inp <- getContents
+  print $ foldl (\s (m1, m2) -> s+(m1*m2)) 0 $ map (fromRight (0, 0) . parse parseMul "(input)") $ tails inp
+  where
+    parseMul :: Parsec String () (Int, Int)
+    parseMul = do
+      m1 <- string "mul(" *> many1 digit <* char ',' <&> read
+      m2 <- many1 digit <* char ')' <&> read
+      return (m1, m2)
+
 main :: IO ()
-main = day2_2
+main = day3_1
