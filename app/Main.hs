@@ -1,4 +1,3 @@
-{-# LANGUAGE TupleSections #-}
 {-# OPTIONS_GHC -fno-warn-incomplete-patterns #-}
 module Main where
 
@@ -25,8 +24,14 @@ parseLocIdLists = many $ do
 day1 :: IO ()
 day1 = do
   inp <- getContents
-  let loc_lists = fromRight [] $ parse parseLocIdLists "(input)" inp
-  print $ sum $ map (uncurry (-)) $ uncurry zip $ bimap sort sort $ unzip loc_lists
+  let (ls,rs) = unzip $ fromRight [] $ parse parseLocIdLists "(input)" inp
+  print $ sum $ zipWith (\x y -> abs $ x - y) (sort ls) (sort rs)
+
+day1_2 :: IO ()
+day1_2 = do
+  inp <- getContents
+  let (ls,rs) = unzip $ fromRight [] $ parse parseLocIdLists "(input)" inp
+  print $ foldl (\s el -> s + (el * length (filter (== el) rs))) 0 ls
   
 main :: IO ()
-main = day1
+main = day1_2
