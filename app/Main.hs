@@ -70,5 +70,22 @@ day3_1 = do
       m2 <- many1 digit <* char ')' <&> read
       return (m1, m2)
 
+day3_2 :: IO ()
+day3_2 = do
+  inp <- getContents
+  print $ process True $ tails inp
+  where
+    parseMul :: Parsec String () (Int, Int)
+    parseMul = do
+      m1 <- string "mul(" *> many1 digit <* char ',' <&> read
+      m2 <- many1 digit <* char ')' <&> read
+      return (m1, m2)
+    process _ [] = 0
+    process _ (xs:xss) | "do()" `isPrefixOf` xs = process True xss
+    process _ (xs:xss) | "don't()" `isPrefixOf` xs = process False xss
+    process False (_:xss) = process False xss
+    process True (xs:xss) = let (m1, m2) = fromRight (0, 0) . parse parseMul "(input)" $ xs in
+                               m1*m2 + process True xss
+
 main :: IO ()
 main = day3_1
