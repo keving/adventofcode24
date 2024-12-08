@@ -4,13 +4,12 @@ module Main where
 import Data.Either (fromRight)
 import Data.Functor ((<&>))
 import Data.List (isPrefixOf, tails, singleton, group, sort, sortBy, sortOn, transpose)
-import Data.Map ((!))
+import Data.Map ((!), insertWith, empty, findWithDefault)
 import qualified Data.Map as Map
 import Data.Maybe (mapMaybe)
 import Data.Ord
 import Text.Parsec
 import Text.Parsec.Number
-import Text.Regex.TDFA
 
 parseLocIdLists :: Parsec String () [(Int, Int)]
 parseLocIdLists = many $ do
@@ -111,5 +110,29 @@ day4_2 = do
                                       sort [(ws!!(r-1))!!(c+1), (ws!!(r+1))!!(c-1)]]
 
 
+day5_1 :: IO ()
+day5_1 = do
+  inp <- getContents
+  let (cs,ms) = fromRight ([], []) $ parse parsePages "(input)" inp
+  let cs_map = foldl (\m (k, v) -> insertWith (++) k v m) empty cs
+  print $ sum $ map (\xs -> xs !! div (length xs) 2) $ filter (snd . foldl (\(s,v) e -> (s ++ findWithDefault [] e cs_map, v && (e `notElem` s))) ([], True)) ms
+  where
+    parsePages :: Parsec String () ([(Int, [Int])], [[Int]])
+    parsePages = do
+      constraints <- many $ do
+                               l <- int
+                               _ <- char '|'
+                               r <- int
+                               _ <- space
+                               return (r, [l])
+      spaces
+      manuals <- many1 $ do
+                           m <- sepBy int (char ',')
+                           _ <- space
+                           return m
+      return (constraints, manuals)
+
+
+
 main :: IO ()
-main = day4_2
+main = day5_1
