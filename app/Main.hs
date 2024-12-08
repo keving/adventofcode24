@@ -98,5 +98,18 @@ day4_1 = do
                                     e:es -> go (e:ts) es
                                     where ts = [t | _:t <- b]
 
+day4_2 :: IO ()
+day4_2 = do
+  inp@(hinp:_) <- fmap lines getContents
+  -- Surround with dots.
+  let ws = hf hinp ++ map (\l -> ['.'] ++ l ++ ['.']) inp ++ hf hinp
+  let ws_coords = concat $ zipWith (\r xs -> zipWith (\c l -> ((r, c), l)) [0::Int ..] xs) [0::Int ..] ws
+  print $ length $ filter (\((r,c), _) -> is_xmas ws r c) $ filter (\(_, l) -> l == 'A') ws_coords
+  where
+    hf xs = [replicate (length xs + 2) '.']
+    is_xmas ws r c = ["MS", "MS"] == [sort [(ws!!(r-1))!!(c-1), (ws!!(r+1))!!(c+1)],
+                                      sort [(ws!!(r-1))!!(c+1), (ws!!(r+1))!!(c-1)]]
+
+
 main :: IO ()
-main = day4_1
+main = day4_2
