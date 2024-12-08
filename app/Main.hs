@@ -132,7 +132,36 @@ day5_1 = do
                            return m
       return (constraints, manuals)
 
+day5_2 :: IO ()
+day5_2 = do
+  inp <- getContents
+  let (cs,ms) = fromRight ([], []) $ parse parsePages "(input)" inp
+  -- k -> [v | v must be before k]
+  let cs_map = foldl (\m (k, v) -> insertWith (++) k v m) empty $ map (\(l, r) -> (l, [r])) cs
+  -- k -> [v | v must be after k]
+  let cs_map_inv = foldl (\m (k, v) -> insertWith (++) k v m) empty $ map (\(l, r) -> (r, [l])) cs
+  let wrongs = filter (not . snd . foldl (\(s,v) e -> (s ++ findWithDefault [] e cs_map, v && (e `notElem` s))) ([], True)) ms
+  print $ sum $ map ((\xs -> xs !! div (length xs) 2) . foldl (\s e -> ins (findWithDefault [] e cs_map_inv) e s) []) wrongs
+  where
+    ins _ e [] = [e]
+    ins bs e xs@(h:_) | h `elem` bs = e:xs
+    ins bs e (h:t) = h:ins bs e t
+    parsePages :: Parsec String () ([(Int, Int)], [[Int]])
+    parsePages = do
+      constraints <- many $ do
+                               l <- int
+                               _ <- char '|'
+                               r <- int
+                               _ <- space
+                               return (r, l)
+      spaces
+      manuals <- many1 $ do
+                           m <- sepBy int (char ',')
+                           _ <- space
+                           return m
+      return (constraints, manuals)
+
 
 
 main :: IO ()
-main = day5_1
+main = day5_2
