@@ -3,7 +3,7 @@ module Main where
 
 import Data.Either (fromRight)
 import Data.Functor ((<&>))
-import Data.List (isPrefixOf, tails, singleton, group, sort, sortBy, sortOn, transpose)
+import Data.List (isPrefixOf, tails, singleton, group, sort, sortBy, sortOn, transpose, nub)
 import Data.Map ((!), insertWith, empty, findWithDefault)
 import qualified Data.Map as Map
 import Data.Maybe (mapMaybe)
@@ -161,7 +161,26 @@ day5_2 = do
                            return m
       return (constraints, manuals)
 
+day6_1 :: IO ()
+day6_1 = do
+  xss <- fmap lines getContents
+  let xss_coords = zipWith (\r xs -> zipWith (\c l -> ((r, c), l)) [0::Int ..] xs) [0::Int ..] xss
+  let start = head $ filter (\(_,c) -> c `notElem` ".#") $ concat xss_coords
+  let board_maps = Map.fromList [('>', xss_coords), ('v', transpose xss_coords), ('<', map reverse xss_coords), ('^', map reverse $ transpose xss_coords)]
+  print $ length $ nub $ find_path start board_maps
+  where
+    turn '>' = 'v'
+    turn 'v' = '<'
+    turn '<' = '^'
+    turn '^' = '>'
 
+    find_path :: ((Int, Int), Char) -> Map.Map Char [[((Int,Int), Char)]] -> [(Int, Int)]
+    find_path ((x,y),d) b | null rest = map fst travel
+                          | otherwise = map fst travel ++ find_path (np, turn d) b
+      where
+       path = concatMap (dropWhile ((/= (x,y)) . fst)) (b!d)
+       (travel, rest) = span ((/= '#') . snd) path
+       (np,_) = last travel
 
 main :: IO ()
-main = day5_2
+main = day6_1
