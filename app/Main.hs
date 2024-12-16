@@ -4,7 +4,7 @@ module Main where
 import Data.Either (fromRight)
 import Data.Functor ((<&>))
 import Data.List (isPrefixOf, tails, singleton, group, sort, sortBy, sortOn, transpose, nub)
-import Data.Map ((!), insertWith, empty, findWithDefault)
+import Data.Map ((!), insertWith, empty, findWithDefault, update)
 import qualified Data.Map as Map
 import Data.Maybe (mapMaybe)
 import Data.Ord
@@ -182,5 +182,34 @@ day6_1 = do
        (travel, rest) = span ((/= '#') . snd) path
        (np,_) = last travel
 
+day6_2 :: IO ()
+day6_2 = do
+  xss <- fmap lines getContents
+  let xss_coords = zipWith (\r xs -> zipWith (\c l -> ((r, c), l)) [0::Int ..] xs) [0::Int ..] xss
+  let start = head $ filter (\(_,c) -> c `notElem` ".#") $ concat xss_coords
+  let board_maps = Map.fromList [('>', xss_coords), ('v', transpose xss_coords), ('<', map reverse xss_coords), ('^', map reverse $ transpose xss_coords)]
+  let visited = find_path start board_maps []
+  print $ length $ filter snd $ tail $ map (\p -> find_path start (add_block board_maps p) []) (fst visited)
+  where
+    turn '>' = 'v'
+    turn 'v' = '<'
+    turn '<' = '^'
+    turn '^' = '>'
+
+    -- Returns (path, is_cycle)
+    find_path :: ((Int, Int), Char) -> Map.Map Char [[((Int,Int), Char)]] -> [(Int, Int, Char)] -> ([(Int, Int)], Bool)
+    find_path ((x,y),d) b t | null rest = (squares, False)
+                            | (x, y, d) `elem` t = ([], True)
+                            | otherwise = (nub (squares ++ tail_squares), is_cycle)
+      where
+       path = concatMap (dropWhile ((/= (x,y)) . fst)) (b!d)
+       (travel, rest) = span ((/= '#') . snd) $ ((x,y), '.'):path
+       squares = map fst travel
+       (tail_squares, is_cycle) = find_path (np, turn d) b ((x,y,d):t)
+       (np,_) = last travel
+
+    add_block :: Map.Map Char [[((Int,Int), Char)]] -> (Int,Int) -> Map.Map Char [[((Int,Int), Char)]]
+    add_block m p = Map.map (map (map (\e -> if fst e == p then (fst e, '#') else e))) m
+
 main :: IO ()
-main = day6_1
+main = day6_2
