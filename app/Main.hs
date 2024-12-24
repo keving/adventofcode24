@@ -211,5 +211,22 @@ day6_2 = do
     add_block :: Map.Map Char [[((Int,Int), Char)]] -> (Int,Int) -> Map.Map Char [[((Int,Int), Char)]]
     add_block m p = Map.map (map (map (\e -> if fst e == p then (fst e, '#') else e))) m
 
+day7_1 :: IO ()
+day7_1 = do
+  xss <- fmap lines getContents
+  let ls = map (fromRight (0, []) . parse parseLine "(input)") $ xss
+  print $ sum $ map (\(s,c:cs) -> f s c cs) ls
+  where
+    f :: Int -> Int -> [Int] -> Int
+    f s n [] | n == s = s
+             | otherwise = 0
+    f s n (o:os) = max (f s (n+o) os) (f s (n*o) os)
+
+    parseLine :: Parsec String () (Int, [Int])
+    parseLine = do
+      total <- many1 digit <* char ':' <* spaces <&> read
+      components <- many1 $ many1 digit <* spaces <&> read
+      return (total, components)
+
 main :: IO ()
-main = day6_2
+main = day7_1
